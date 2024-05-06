@@ -1,0 +1,20 @@
+{
+  "default": "balanced",
+  "profiles": {
+    "balanced": {
+      "boost": true,
+      "energy_preference": "balancePower",
+      "scaling_governor": "powersave"
+    },
+    "powersave": {
+      "boost": true,
+      "energy_preference": "power",
+      "scaling_governor": "powersave"
+    },
+    "performance": {
+      "boost": true,
+      "energy_preference": "performance",
+      "scaling_governor": "performance"
+    }
+  }
+}

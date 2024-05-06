@@ -1,0 +1,58 @@
+use std::future::pending;
+
+use anyhow::Result;
+use clap::Parser;
+use zbus::connection;
+
+mod dbus;
+mod drivers;
+mod settings;
+mod types;
+
+/// Drop in replacement for power-profiles-daemon
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// Path to config file
+    #[arg(short, long, default_value = "config.json")]
+    config: String,
+
+    /// Name of the driver to use
+    #[arg(long, default_value = "auto")]
+    driver: String,
+
+    /// Best effort to avoid mutable operations
+    #[arg(long, default_value_t = false)]
+    dry_run: bool,
+
+    /// Launch on the user session bus (useful for development)
+    #[arg(long, default_value_t = false)]
+    user: bool,
+}
+
+#[async_std::main]
+async fn main() -> Result<()> {
+    pretty_env_logger::init();
+    let args = Args::parse();
+
+    let handler = dbus::Handler::new(
+        drivers::probe(args.driver)?,
+        settings::Settings::build(&args.config)?,
+    );
+
+    let mut bus_type = connection::Builder::system
+        as fn() -> Result<zbus::ConnectionBuilder<'static>, zbus::Error>;
+
+    if args.user {
+        bus_type = connection::Builder::session
+            as fn() -> Result<zbus::ConnectionBuilder<'static>, zbus::Error>;
+    }
+
+    let _conn = bus_type()?
+        .name("org.freedesktop.UPower.PowerProfiles")?
+        .serve_at("/org/freedesktop/UPower/PowerProfiles", handler)?
+        .build()
+        .await?;
+
+    Ok(pending::<()>().await)
+}
