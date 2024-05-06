@@ -4,9 +4,6 @@ use zbus::interface;
 
 use crate::{drivers, settings::Settings, types::PowerProfileHold};
 
-pub(crate) mod legacy;
-mod types;
-
 #[derive(Clone)]
 pub(crate) struct Handler {
     driver: std::sync::Arc<dyn drivers::Driver + Send + Sync>,
@@ -24,7 +21,7 @@ impl Handler {
     }
 }
 
-#[interface(name = "org.freedesktop.UPower.PowerProfiles")]
+#[interface(name = "net.hadess.PowerProfiles")]
 impl Handler {
     #[zbus(property)]
     async fn actions(&self) -> anyhow::Result<Vec<String>, zbus::fdo::Error> {
@@ -101,12 +98,12 @@ impl Handler {
     }
 
     #[zbus(property)]
-    async fn profiles(&self) -> anyhow::Result<Vec<types::PowerProfile>, zbus::fdo::Error> {
+    async fn profiles(&self) -> anyhow::Result<Vec<super::types::PowerProfile>, zbus::fdo::Error> {
         log::debug!("Profiles being requested!");
 
         Ok(
             self.settings.profiles().clone().into_values().map(|profile| {
-                types::PowerProfile::new(&profile, self.driver.name())
+                super::types::PowerProfile::new(&profile, self.driver.name())
             }).collect()
         )
     }

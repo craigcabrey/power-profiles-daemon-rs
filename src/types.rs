@@ -161,10 +161,14 @@ impl Into<String> for ScalingGovernor {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Deserialize, Serialize, Type, zvariant::Value, zvariant::OwnedValue)]
+#[zvariant(signature = "dict")]
 pub(crate) struct PowerProfileHold {
+    #[zvariant(rename = "ApplicationId")]
     pub(crate) application_id: String,
+    #[zvariant(rename = "Profile")]
     pub(crate) profile: String,
+    #[zvariant(rename = "Reason")]
     pub(crate) reason: String,
 }
 

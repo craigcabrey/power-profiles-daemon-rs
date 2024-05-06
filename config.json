@@ -6,7 +6,7 @@
       "energy_preference": "balancePower",
       "scaling_governor": "powersave"
     },
-    "powersave": {
+    "power-saver": {
       "boost": true,
       "energy_preference": "power",
       "scaling_governor": "powersave"

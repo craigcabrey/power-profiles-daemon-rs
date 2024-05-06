@@ -25,6 +25,14 @@ struct Args {
     #[arg(long, default_value_t = false)]
     dry_run: bool,
 
+    /// Disable upower interface handler
+    #[arg(long, default_value_t = false)]
+    disable_upower: bool,
+
+    /// Disable legacy interface handler
+    #[arg(long, default_value_t = false)]
+    disable_legacy: bool,
+
     /// Launch on the user session bus (useful for development)
     #[arg(long, default_value_t = false)]
     user: bool,
@@ -36,7 +44,12 @@ async fn main() -> Result<()> {
     let args = Args::parse();
 
     let handler = dbus::Handler::new(
-        drivers::probe(args.driver)?,
+        drivers::probe(args.driver.clone())?,
+        settings::Settings::build(&args.config)?,
+    );
+
+    let legacy_handler = dbus::legacy::Handler::new(
+        drivers::probe(args.driver.clone())?,
         settings::Settings::build(&args.config)?,
     );
 
@@ -48,9 +61,19 @@ async fn main() -> Result<()> {
             as fn() -> Result<zbus::ConnectionBuilder<'static>, zbus::Error>;
     }
 
+    log::info!("Starting upower interface handler");
+
     let _conn = bus_type()?
         .name("org.freedesktop.UPower.PowerProfiles")?
         .serve_at("/org/freedesktop/UPower/PowerProfiles", handler)?
+        .build()
+        .await?;
+
+    log::info!("Starting legacy interface handler");
+
+    let _legacy_conn = bus_type()?
+        .name("net.hadess.PowerProfiles")?
+        .serve_at("/net/hadess/PowerProfiles", legacy_handler)?
         .build()
         .await?;
 
