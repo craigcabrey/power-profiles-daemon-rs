@@ -21,8 +21,8 @@ pub(crate) fn probe(driver_name: String) -> Result<std::sync::Arc<dyn Driver + S
             Ok(res) => res,
             Err(err) => {
                 log::debug!("Skipping driver {}: {:?}", driver_module.name, err);
-                continue
-            },
+                continue;
+            }
         };
 
         let name = driver_module.name;

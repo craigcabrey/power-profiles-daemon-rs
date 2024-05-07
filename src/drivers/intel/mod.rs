@@ -14,9 +14,10 @@ pub fn probe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
     let driver = std::fs::read_to_string(SCALING_DRIVER_PATH)?;
 
     match driver.trim() {
-        "intel_pstate" => Ok(
-            Arc::new(pstate::Driver::new(false, DRIVER.name.to_string())?)
-        ),
+        "intel_pstate" => Ok(Arc::new(pstate::Driver::new(
+            false,
+            DRIVER.name.to_string(),
+        )?)),
         _ => Err(anyhow::anyhow!("unsupported driver {}", driver.trim())),
     }
 }

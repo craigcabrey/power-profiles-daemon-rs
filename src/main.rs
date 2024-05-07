@@ -61,13 +61,15 @@ async fn main() -> Result<()> {
             as fn() -> Result<zbus::ConnectionBuilder<'static>, zbus::Error>;
     }
 
-    log::info!("Starting upower interface handler");
+    if !args.disable_upower {
+        log::info!("Starting upower interface handler");
 
-    let _conn = bus_type()?
-        .name("org.freedesktop.UPower.PowerProfiles")?
-        .serve_at("/org/freedesktop/UPower/PowerProfiles", handler)?
-        .build()
-        .await?;
+        let _conn = bus_type()?
+            .name("org.freedesktop.UPower.PowerProfiles")?
+            .serve_at("/org/freedesktop/UPower/PowerProfiles", handler)?
+            .build()
+            .await?;
+    }
 
     log::info!("Starting legacy interface handler");
 

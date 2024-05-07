@@ -8,7 +8,7 @@ use serde_with::{serde_as, KeyValueMap};
 use crate::types::{InferredPowerProfile, PowerProfile};
 
 #[derive(Clone, Debug, Deserialize)]
-pub(crate) struct Settings{
+pub(crate) struct Settings {
     pub(crate) default: String,
     profiles: HashMap<String, PowerProfile>,
 }
@@ -22,7 +22,10 @@ impl Settings {
 
         match instance.profiles.get(&instance.default) {
             Some(_) => Ok(instance),
-            None => Err(anyhow::anyhow!("Default profile {} is not configured!", instance.default)),
+            None => Err(anyhow::anyhow!(
+                "Default profile {} is not configured!",
+                instance.default
+            )),
         }
     }
 }
@@ -39,24 +42,23 @@ impl TryInto<Settings> for RawSettings {
     type Error = anyhow::Error;
 
     fn try_into(self) -> Result<Settings> {
-        Ok(
-            Settings::new(
-                self.default,
-                self.profiles.into_iter().map(|profile| {
-                    (profile.name.clone(), profile.into())
-                }).collect()
-            )?
-        )
+        Ok(Settings::new(
+            self.default,
+            self.profiles
+                .into_iter()
+                .map(|profile| (profile.name.clone(), profile.into()))
+                .collect(),
+        )?)
     }
 }
 
 impl Settings {
     pub fn build(config_path: &str) -> Result<Self> {
         let raw_settings = Config::builder()
-                .add_source(config::File::with_name(config_path))
-                .add_source(config::Environment::with_prefix("PPD"))
-                .build()?
-                .try_deserialize::<RawSettings>()?;
+            .add_source(config::File::with_name(config_path))
+            .add_source(config::Environment::with_prefix("PPD"))
+            .build()?
+            .try_deserialize::<RawSettings>()?;
 
         Ok(raw_settings.try_into()?)
     }
@@ -69,13 +71,16 @@ impl Settings {
         self.profiles.get(profile_name).cloned()
     }
 
-    pub fn profile_by_inferred(&self, inferred_profile: InferredPowerProfile) -> Option<PowerProfile> {
+    pub fn profile_by_inferred(
+        &self,
+        inferred_profile: InferredPowerProfile,
+    ) -> Option<PowerProfile> {
         for profile in self.profiles.values().into_iter() {
             if *profile == inferred_profile {
-                return Some(profile.clone())
+                return Some(profile.clone());
             }
         }
-        
+
         None
     }
 }

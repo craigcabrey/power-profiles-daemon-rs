@@ -11,45 +11,57 @@ pub(crate) struct Driver {
 }
 
 impl Driver {
-    const ENERGY_PREFERENCE: &'static str = "/sys/devices/system/cpu/cpufreq/policy0/energy_performance_preference";
+    const ENERGY_PREFERENCE: &'static str =
+        "/sys/devices/system/cpu/cpufreq/policy0/energy_performance_preference";
     const ONLINE_CPUS: &'static str = "/sys/devices/system/cpu/online";
     const BOOST_FLAG: &'static str = "/sys/devices/system/cpu/cpufreq/boost";
-    const SCALING_GOVERNOR: &'static str = "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor";
+    const SCALING_GOVERNOR: &'static str =
+        "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor";
 
     pub fn new(dry_run: bool, name: String) -> Result<Self> {
-        Ok(
-            Self {
-                dry_run: dry_run,
-                name: name,
-                status: Status::current()?,
-            }
-        )
+        Ok(Self {
+            dry_run: dry_run,
+            name: name,
+            status: Status::current()?,
+        })
     }
 
     pub fn cores() -> Result<impl Iterator<Item = i32>> {
         let cores = String::from_str(fs::read_to_string(Self::ONLINE_CPUS).unwrap().trim())?;
         let mut range = cores.split("-");
-        
+
         // TODO: probably doesn't handle all parse cases
-        let first = range.next().ok_or(anyhow::anyhow!("Failed to get beginning of range"))?.parse()?;
-        let last: i32 = range.next().ok_or(anyhow::anyhow!("Failed to get end of range"))?.parse()?;
+        let first = range
+            .next()
+            .ok_or(anyhow::anyhow!("Failed to get beginning of range"))?
+            .parse()?;
+        let last: i32 = range
+            .next()
+            .ok_or(anyhow::anyhow!("Failed to get end of range"))?
+            .parse()?;
 
         Ok(first..last)
     }
 
     fn boost_enabled(&self) -> Result<bool> {
-        match fs::read_to_string(Self::BOOST_FLAG).with_context(|| format!("Failed to read from {}", Self::BOOST_FLAG)) {
+        match fs::read_to_string(Self::BOOST_FLAG)
+            .with_context(|| format!("Failed to read from {}", Self::BOOST_FLAG))
+        {
             Ok(res) => Ok(res.trim().parse()?),
             Err(..) => Ok(true),
         }
     }
 
     fn energy_preference(&self) -> Result<EnergyPreference> {
-        Ok(fs::read_to_string(Self::ENERGY_PREFERENCE)?.trim().try_into()?)
+        Ok(fs::read_to_string(Self::ENERGY_PREFERENCE)?
+            .trim()
+            .try_into()?)
     }
 
     fn scaling_governor(&self) -> Result<ScalingGovernor> {
-        Ok(fs::read_to_string(Self::SCALING_GOVERNOR)?.trim().try_into()?)
+        Ok(fs::read_to_string(Self::SCALING_GOVERNOR)?
+            .trim()
+            .try_into()?)
     }
 }
 
@@ -57,9 +69,12 @@ impl crate::drivers::Driver for Driver {
     // TODO: Figure out a way to make this atomic
     fn activate(&self, power_profile: crate::types::PowerProfile) -> Result<()> {
         if self.dry_run {
-            log::debug!("Would have activated power profile {}", power_profile.to_string());
+            log::debug!(
+                "Would have activated power profile {}",
+                power_profile.to_string()
+            );
 
-            return Ok(())
+            return Ok(());
         }
 
         if self.status.boost_supported() {
@@ -74,27 +89,37 @@ impl crate::drivers::Driver for Driver {
 
         log::debug!("Writing to /sys/devices/system/cpu/cpufreq/policy*/scaling_governor");
 
-        Self::cores()?.map(|core_id| {
-            Ok(
-                fs::write::<&str, String>(
-                    format!("/sys/devices/system/cpu/cpufreq/policy{:?}/scaling_governor", core_id).as_str(),
+        Self::cores()?
+            .map(|core_id| {
+                Ok(fs::write::<&str, String>(
+                    format!(
+                        "/sys/devices/system/cpu/cpufreq/policy{:?}/scaling_governor",
+                        core_id
+                    )
+                    .as_str(),
                     power_profile.scaling_governor.into(),
-                )?
-            )
-        }).collect::<Result<()>>()?;
+                )?)
+            })
+            .collect::<Result<()>>()?;
 
-        log::debug!("Writing to /sys/devices/system/cpu/cpufreq/policy*/energy_performance_preference");
+        log::debug!(
+            "Writing to /sys/devices/system/cpu/cpufreq/policy*/energy_performance_preference"
+        );
 
-        Self::cores()?.map(|core_id| {
-            Ok(
-                fs::write::<&str, String>(
-                    format!("/sys/devices/system/cpu/cpufreq/policy{:?}/energy_performance_preference", core_id).as_str(),
+        Self::cores()?
+            .map(|core_id| {
+                Ok(fs::write::<&str, String>(
+                    format!(
+                        "/sys/devices/system/cpu/cpufreq/policy{:?}/energy_performance_preference",
+                        core_id
+                    )
+                    .as_str(),
                     power_profile.energy_preference.into(),
-                )?
-            )
-        }).collect()
+                )?)
+            })
+            .collect()
     }
-    
+
     fn current(&self) -> Result<crate::types::InferredPowerProfile> {
         Ok(crate::types::InferredPowerProfile {
             boost: self.boost_enabled()?,
@@ -138,7 +163,10 @@ impl FromStr for Status {
             "active" => Ok(Status::Active),
             "guided" => Ok(Status::Guided),
             "passive" => Ok(Status::Passive),
-            _ => Err(anyhow::anyhow!("Unrecognized amd-pstate driver status {}", s)),
+            _ => Err(anyhow::anyhow!(
+                "Unrecognized amd-pstate driver status {}",
+                s
+            )),
         }
     }
 }

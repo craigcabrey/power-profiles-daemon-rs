@@ -21,7 +21,12 @@ pub(crate) struct PowerProfile {
 }
 
 impl PowerProfile {
-    pub fn _new(boost: bool, energy_preference: EnergyPreference, name: String, scaling_governor: ScalingGovernor) -> Self {
+    pub fn _new(
+        boost: bool,
+        energy_preference: EnergyPreference,
+        name: String,
+        scaling_governor: ScalingGovernor,
+    ) -> Self {
         PowerProfile {
             boost: boost,
             energy_preference: energy_preference,
@@ -34,14 +39,14 @@ impl PowerProfile {
 impl PartialEq<InferredPowerProfile> for PowerProfile {
     fn eq(&self, other: &InferredPowerProfile) -> bool {
         if self.boost != other.boost {
-            return false
+            return false;
         }
-        
+
         if self.energy_preference != other.energy_preference {
-            return false
+            return false;
         }
         if self.scaling_governor != other.scaling_governor {
-            return false
+            return false;
         }
 
         true
@@ -61,11 +66,21 @@ impl ToString for PowerProfile {
 }
 
 // TODO: serde doesn't recognize snake_case from the config json...
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, zvariant::Value, zvariant::OwnedValue, Type)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Deserialize,
+    PartialEq,
+    Serialize,
+    zvariant::Value,
+    zvariant::OwnedValue,
+    Type,
+)]
 pub(crate) enum EnergyPreference {
     #[serde(alias = "default")]
     Default = 0,
-    
+
     #[serde(alias = "performance")]
     Performance = 1,
 
@@ -87,7 +102,8 @@ impl ToString for EnergyPreference {
             Self::BalancePerformance => "balance_performance",
             Self::BalancePower => "balance_power",
             Self::Power => "power",
-        }.to_string()
+        }
+        .to_string()
     }
 }
 
@@ -120,7 +136,17 @@ impl FromStr for EnergyPreference {
     }
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, zvariant::Value, zvariant::OwnedValue, Type)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Deserialize,
+    PartialEq,
+    Serialize,
+    zvariant::Value,
+    zvariant::OwnedValue,
+    Type,
+)]
 pub(crate) enum ScalingGovernor {
     Performance = 0,
     Powersave = 1,
@@ -131,7 +157,8 @@ impl ToString for ScalingGovernor {
         match self {
             Self::Performance => "performance",
             Self::Powersave => "powersave",
-        }.to_string()
+        }
+        .to_string()
     }
 }
 
@@ -145,7 +172,7 @@ impl TryFrom<&str> for ScalingGovernor {
 
 impl FromStr for ScalingGovernor {
     type Err = anyhow::Error;
-    
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "performance" => Ok(ScalingGovernor::Performance),

@@ -15,8 +15,11 @@ pub(crate) struct Handler {
 }
 
 impl Handler {
-    pub fn new(driver: std::sync::Arc<dyn drivers::Driver + Send + Sync>, settings: Settings) -> Self {
-        Self{
+    pub fn new(
+        driver: std::sync::Arc<dyn drivers::Driver + Send + Sync>,
+        settings: Settings,
+    ) -> Self {
+        Self {
             driver: driver,
             profile_holds: HashMap::new(),
             settings,
@@ -37,16 +40,14 @@ impl Handler {
         log::debug!("Active profile being requested!");
 
         match self.driver.current() {
-            Ok(profile) => {
-                match self.settings.profile_by_inferred(profile) {
-                    Some(profile) => {
-                        log::debug!("Returning active profile: {}", profile.name);
-                        Ok(profile.name)
-                    },
-                    None => {
-                        log::warn!("Unable to determine current profile");
-                        Ok(self.settings.default.clone())
-                    }
+            Ok(profile) => match self.settings.profile_by_inferred(profile) {
+                Some(profile) => {
+                    log::debug!("Returning active profile: {}", profile.name);
+                    Ok(profile.name)
+                }
+                None => {
+                    log::warn!("Unable to determine current profile");
+                    Ok(self.settings.default.clone())
                 }
             },
             Err(err) => Err(zbus::fdo::Error::Failed(format!("{:?}", err)))?,
@@ -58,19 +59,15 @@ impl Handler {
         log::info!("Activating profile: {}", name);
 
         match self.settings.profile_by_name(&name) {
-            Some(profile) => {
-                match self.driver.activate(profile) {
-                    Ok(()) => Ok(()),
-                    Err(err) => Err(zbus::fdo::Error::Failed(format!("{:?}", err))),
-                }
+            Some(profile) => match self.driver.activate(profile) {
+                Ok(()) => Ok(()),
+                Err(err) => Err(zbus::fdo::Error::Failed(format!("{:?}", err))),
             },
             None => {
                 log::warn!("Received request to activate missing profile {}", name);
 
-                Err(
-                    zbus::fdo::Error::InvalidArgs(format!("No such profile"))
-                )
-            },
+                Err(zbus::fdo::Error::InvalidArgs(format!("No such profile")))
+            }
         }
     }
 
@@ -104,11 +101,13 @@ impl Handler {
     async fn profiles(&self) -> anyhow::Result<Vec<types::PowerProfile>, zbus::fdo::Error> {
         log::debug!("Profiles being requested!");
 
-        Ok(
-            self.settings.profiles().clone().into_values().map(|profile| {
-                types::PowerProfile::new(&profile, self.driver.name())
-            }).collect()
-        )
+        Ok(self
+            .settings
+            .profiles()
+            .clone()
+            .into_values()
+            .map(|profile| types::PowerProfile::new(&profile, self.driver.name()))
+            .collect())
     }
 
     #[zbus(property)]
@@ -121,13 +120,23 @@ impl Handler {
     #[zbus(signal)]
     async fn profile_released(ctxt: &zbus::SignalContext<'_>) -> zbus::Result<()>;
 
-    fn hold_profile(&mut self, profile: &str, reason: &str, application_id: &str) -> anyhow::Result<u32, zbus::fdo::Error> {
-        log::debug!("Hold profile being called: profile={}, reason={}, application_id={}", profile, reason, application_id);
+    fn hold_profile(
+        &mut self,
+        profile: &str,
+        reason: &str,
+        application_id: &str,
+    ) -> anyhow::Result<u32, zbus::fdo::Error> {
+        log::debug!(
+            "Hold profile being called: profile={}, reason={}, application_id={}",
+            profile,
+            reason,
+            application_id
+        );
 
         let cookie = 0;
 
         self.profile_holds.insert(
-            cookie,    
+            cookie,
             PowerProfileHold::new(
                 application_id.to_owned(),
                 profile.to_owned(),
@@ -136,11 +145,9 @@ impl Handler {
         );
 
         match self.settings.profiles().get(profile) {
-            Some(profile) => {
-                match self.driver.activate(profile.clone()) {
-                    Ok(()) => Ok(cookie),
-                    Err(err) => Err(zbus::fdo::Error::Failed(err.to_string())),
-                }
+            Some(profile) => match self.driver.activate(profile.clone()) {
+                Ok(()) => Ok(cookie),
+                Err(err) => Err(zbus::fdo::Error::Failed(err.to_string())),
             },
             _ => Err(zbus::fdo::Error::InvalidArgs("No such profile".to_string())),
         }
@@ -151,7 +158,10 @@ impl Handler {
 
         match self.profile_holds.remove(&cookie) {
             Some(_) => log::info!("Removed profile hold for cookie {}", cookie),
-            None => log::info!("Request to remove profile hold for missing cookie {}", cookie),
+            None => log::info!(
+                "Request to remove profile hold for missing cookie {}",
+                cookie
+            ),
         };
 
         Ok(())

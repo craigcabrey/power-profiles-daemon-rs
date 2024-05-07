@@ -14,12 +14,14 @@ pub fn probe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
     let driver = std::fs::read_to_string(SCALING_DRIVER_PATH)?;
 
     match driver.trim() {
-        "amd-pstate" => Ok(
-            Arc::new(pstate::Driver::new(false, "amd-pstate".to_string())?)
-        ),
-        "amd-pstate-epp" => Ok(
-            Arc::new(pstate::Driver::new(false, "amd-pstate-epp".to_string())?)
-        ),
+        "amd-pstate" => Ok(Arc::new(pstate::Driver::new(
+            false,
+            "amd-pstate".to_string(),
+        )?)),
+        "amd-pstate-epp" => Ok(Arc::new(pstate::Driver::new(
+            false,
+            "amd-pstate-epp".to_string(),
+        )?)),
         _ => Err(anyhow::anyhow!("unsupported driver {}", driver.trim())),
     }
 }
