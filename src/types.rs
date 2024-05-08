@@ -12,13 +12,14 @@ pub(crate) struct InferredPowerProfile {
     pub(crate) maximum_frequency: u32,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, zvariant::Value, zvariant::OwnedValue, Type)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub(crate) struct PowerProfile {
     pub(crate) boost: bool,
     pub(crate) energy_preference: EnergyPreference,
     #[serde(rename = "$key$")]
     pub(crate) name: String,
     pub(crate) scaling_governor: ScalingGovernor,
+    pub(crate) maximum_frequency: Option<u32>,
 }
 
 impl PowerProfile {
@@ -27,12 +28,14 @@ impl PowerProfile {
         energy_preference: EnergyPreference,
         name: String,
         scaling_governor: ScalingGovernor,
+        maximum_frequency: Option<u32>,
     ) -> Self {
         PowerProfile {
             boost: boost,
             energy_preference: energy_preference,
             name: name,
             scaling_governor: scaling_governor,
+            maximum_frequency: maximum_frequency,
         }
     }
 }
@@ -67,17 +70,7 @@ impl ToString for PowerProfile {
 }
 
 // TODO: serde doesn't recognize snake_case from the config json...
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    Deserialize,
-    PartialEq,
-    Serialize,
-    zvariant::Value,
-    zvariant::OwnedValue,
-    Type,
-)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub(crate) enum EnergyPreference {
     #[serde(alias = "default")]
     Default = 0,
@@ -137,17 +130,7 @@ impl FromStr for EnergyPreference {
     }
 }
 
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    Deserialize,
-    PartialEq,
-    Serialize,
-    zvariant::Value,
-    zvariant::OwnedValue,
-    Type,
-)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub(crate) enum ScalingGovernor {
     Performance = 0,
     Powersave = 1,
