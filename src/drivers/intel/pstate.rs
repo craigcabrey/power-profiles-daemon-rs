@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
+use async_std::fs;
 use async_trait::async_trait;
-use std::fs;
 use std::str::FromStr;
 
 use crate::{
@@ -21,16 +21,17 @@ impl Driver {
     const SCALING_GOVERNOR: &'static str =
         "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor";
 
-    pub fn new(dry_run: bool, name: String) -> Result<Self> {
+    pub async fn new(dry_run: bool, name: String) -> Result<Self> {
         Ok(Self {
             dry_run: dry_run,
             name,
-            _status: Status::current()?,
+            _status: Status::current().await?,
         })
     }
 
-    fn turbo_enabled(&self) -> Result<bool> {
+    async fn turbo_enabled(&self) -> Result<bool> {
         match fs::read_to_string(Self::NO_TURBO_FLAG)
+            .await
             .with_context(|| format!("Failed to read from {}", Self::NO_TURBO_FLAG))
         {
             Ok(res) => Ok(!res.trim().parse()?),
@@ -38,14 +39,16 @@ impl Driver {
         }
     }
 
-    fn energy_preference(&self) -> Result<EnergyPreference> {
-        Ok(fs::read_to_string(Self::ENERGY_PREFERENCE)?
+    async fn energy_preference(&self) -> Result<EnergyPreference> {
+        Ok(fs::read_to_string(Self::ENERGY_PREFERENCE)
+            .await?
             .trim()
             .try_into()?)
     }
 
-    fn scaling_governor(&self) -> Result<ScalingGovernor> {
-        Ok(fs::read_to_string(Self::SCALING_GOVERNOR)?
+    async fn scaling_governor(&self) -> Result<ScalingGovernor> {
+        Ok(fs::read_to_string(Self::SCALING_GOVERNOR)
+            .await?
             .trim()
             .try_into()?)
     }
@@ -65,46 +68,17 @@ impl crate::drivers::Driver for Driver {
 
         log::debug!("Writing to /sys/devices/system/cpu/cpufreq/policy*/scaling_governor");
 
-        utils::online_cpu_ids(&utils::online_cpus().await?)
-            .await?
-            .into_iter()
-            .map(|core_id| {
-                Ok(fs::write::<&str, String>(
-                    format!(
-                        "/sys/devices/system/cpu/cpufreq/policy{:?}/scaling_governor",
-                        core_id
-                    )
-                    .as_str(),
-                    power_profile.scaling_governor.into(),
-                )?)
-            })
-            .collect::<Result<()>>()?;
+        utils::activate_scaling_governor(self.scaling_governor().await?).await?;
+        utils::activate_energy_preference(self.energy_preference().await?).await?;
 
-        log::debug!(
-            "Writing to /sys/devices/system/cpu/cpufreq/policy*/energy_performance_preference"
-        );
-
-        utils::online_cpu_ids(&utils::online_cpus().await?)
-            .await?
-            .into_iter()
-            .map(|core_id| {
-                Ok(fs::write::<&str, String>(
-                    format!(
-                        "/sys/devices/system/cpu/cpufreq/policy{:?}/energy_performance_preference",
-                        core_id
-                    )
-                    .as_str(),
-                    power_profile.energy_preference.into(),
-                )?)
-            })
-            .collect()
+        Ok(())
     }
 
     async fn current(&self) -> Result<crate::types::InferredPowerProfile> {
         Ok(crate::types::InferredPowerProfile {
-            boost: self.turbo_enabled()?,
-            scaling_governor: self.scaling_governor()?,
-            energy_preference: self.energy_preference()?,
+            boost: self.turbo_enabled().await?,
+            scaling_governor: self.scaling_governor().await?,
+            energy_preference: self.energy_preference().await?,
             maximum_frequency: utils::maximum_frequency().await?,
         })
     }
@@ -123,8 +97,8 @@ enum Status {
 impl Status {
     const PSTATE_STATUS_PATH: &'static str = "/sys/devices/system/cpu/intel_pstate/status";
 
-    fn current() -> Result<Self> {
-        Self::from_str(&fs::read_to_string(Self::PSTATE_STATUS_PATH)?.trim())
+    async fn current() -> Result<Self> {
+        Self::from_str(&fs::read_to_string(Self::PSTATE_STATUS_PATH).await?.trim())
     }
 }
 

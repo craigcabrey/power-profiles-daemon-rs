@@ -11,13 +11,16 @@ pub(crate) const DRIVER: super::DriverModule = super::DriverModule {
 const SCALING_DRIVER_PATH: &str = "/sys/devices/system/cpu/cpufreq/policy0/scaling_driver";
 
 pub fn probe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
-    let driver = std::fs::read_to_string(SCALING_DRIVER_PATH)?;
+    futures::executor::block_on(aprobe())
+}
+
+async fn aprobe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
+    let driver = async_std::fs::read_to_string(SCALING_DRIVER_PATH).await?;
 
     match driver.trim() {
-        "intel_pstate" => Ok(Arc::new(pstate::Driver::new(
-            false,
-            DRIVER.name.to_string(),
-        )?)),
+        "intel_pstate" => Ok(Arc::new(
+            pstate::Driver::new(false, DRIVER.name.to_string()).await?,
+        )),
         _ => Err(anyhow::anyhow!("unsupported driver {}", driver.trim())),
     }
 }

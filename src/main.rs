@@ -57,6 +57,8 @@ async fn main() -> Result<()> {
         as fn() -> Result<zbus::ConnectionBuilder<'static>, zbus::Error>;
 
     if args.user {
+        log::info!("Using the user session bus");
+
         bus_type = connection::Builder::session
             as fn() -> Result<zbus::ConnectionBuilder<'static>, zbus::Error>;
     }
