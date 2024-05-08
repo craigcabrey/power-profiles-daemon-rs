@@ -59,7 +59,7 @@ impl Handler {
         log::info!("Activating profile: {}", name);
 
         match self.settings.profile_by_name(&name) {
-            Some(profile) => match self.driver.activate(profile) {
+            Some(profile) => match self.driver.activate(profile).await {
                 Ok(()) => Ok(()),
                 Err(err) => Err(zbus::fdo::Error::Failed(format!("{:?}", err))),
             },
@@ -120,7 +120,7 @@ impl Handler {
     #[zbus(signal)]
     async fn profile_released(ctxt: &zbus::SignalContext<'_>) -> zbus::Result<()>;
 
-    fn hold_profile(
+    async fn hold_profile(
         &mut self,
         profile: &str,
         reason: &str,
@@ -145,7 +145,7 @@ impl Handler {
         );
 
         match self.settings.profiles().get(profile) {
-            Some(profile) => match self.driver.activate(profile.clone()) {
+            Some(profile) => match self.driver.activate(profile.clone()).await {
                 Ok(()) => Ok(cookie),
                 Err(err) => Err(zbus::fdo::Error::Failed(err.to_string())),
             },

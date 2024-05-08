@@ -1,16 +1,19 @@
 use anyhow::Result;
+use async_trait::async_trait;
 
 mod amd;
 mod dummy;
 mod intel;
+mod utils;
 
 pub(crate) struct DriverModule<'a> {
     name: &'a str,
     probe: fn() -> Result<std::sync::Arc<dyn Driver + Sync + Send>>,
 }
 
+#[async_trait]
 pub(crate) trait Driver: Send + Sync {
-    fn activate(&self, power_profile: crate::types::PowerProfile) -> Result<()>;
+    async fn activate(&self, power_profile: crate::types::PowerProfile) -> Result<()>;
     fn current(&self) -> Result<crate::types::InferredPowerProfile>;
     fn name(&self) -> String;
 }

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Result;
+use async_trait::async_trait;
 
 pub(crate) const DRIVER: super::DriverModule = super::DriverModule {
     name: "dummy",
@@ -8,8 +9,9 @@ pub(crate) const DRIVER: super::DriverModule = super::DriverModule {
 };
 pub struct Driver {}
 
+#[async_trait]
 impl crate::drivers::Driver for Driver {
-    fn activate(&self, _power_profile: crate::types::PowerProfile) -> Result<()> {
+    async fn activate(&self, _power_profile: crate::types::PowerProfile) -> Result<()> {
         log::debug!("Activating!");
         Ok(())
     }

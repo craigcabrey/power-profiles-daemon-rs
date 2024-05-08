@@ -1,8 +1,12 @@
 use anyhow::{Context, Result};
+use async_trait::async_trait;
 use std::fs;
 use std::str::FromStr;
 
-use crate::types::{EnergyPreference, ScalingGovernor};
+use crate::{
+    drivers::utils,
+    types::{EnergyPreference, ScalingGovernor},
+};
 
 pub(crate) struct Driver {
     dry_run: bool,
@@ -13,7 +17,6 @@ pub(crate) struct Driver {
 impl Driver {
     const ENERGY_PREFERENCE: &'static str =
         "/sys/devices/system/cpu/cpufreq/policy0/energy_performance_preference";
-    const ONLINE_CPUS: &'static str = "/sys/devices/system/cpu/online";
     const NO_TURBO_FLAG: &'static str = "/sys/devices/system/cpu/intel_pstate/no_turbo";
     const SCALING_GOVERNOR: &'static str =
         "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor";
@@ -24,23 +27,6 @@ impl Driver {
             name,
             _status: Status::current()?,
         })
-    }
-
-    pub fn cores() -> Result<impl Iterator<Item = i32>> {
-        let cores = String::from_str(fs::read_to_string(Self::ONLINE_CPUS).unwrap().trim())?;
-        let mut range = cores.split("-");
-
-        // TODO: probably doesn't handle all parse cases
-        let first = range
-            .next()
-            .ok_or(anyhow::anyhow!("Failed to get beginning of range"))?
-            .parse()?;
-        let last: i32 = range
-            .next()
-            .ok_or(anyhow::anyhow!("Failed to get end of range"))?
-            .parse()?;
-
-        Ok(first..last)
     }
 
     fn turbo_enabled(&self) -> Result<bool> {
@@ -65,8 +51,9 @@ impl Driver {
     }
 }
 
+#[async_trait]
 impl crate::drivers::Driver for Driver {
-    fn activate(&self, power_profile: crate::types::PowerProfile) -> Result<()> {
+    async fn activate(&self, power_profile: crate::types::PowerProfile) -> Result<()> {
         if self.dry_run {
             log::debug!(
                 "Would have activated power profile {}",
@@ -78,7 +65,9 @@ impl crate::drivers::Driver for Driver {
 
         log::debug!("Writing to /sys/devices/system/cpu/cpufreq/policy*/scaling_governor");
 
-        Self::cores()?
+        utils::cores(&utils::online_cpus().await?)
+            .await?
+            .into_iter()
             .map(|core_id| {
                 Ok(fs::write::<&str, String>(
                     format!(
@@ -95,7 +84,9 @@ impl crate::drivers::Driver for Driver {
             "Writing to /sys/devices/system/cpu/cpufreq/policy*/energy_performance_preference"
         );
 
-        Self::cores()?
+        utils::cores(&utils::online_cpus().await?)
+            .await?
+            .into_iter()
             .map(|core_id| {
                 Ok(fs::write::<&str, String>(
                     format!(
