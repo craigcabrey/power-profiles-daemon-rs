@@ -100,11 +100,12 @@ impl crate::drivers::Driver for Driver {
             .collect()
     }
 
-    fn current(&self) -> Result<crate::types::InferredPowerProfile> {
+    async fn current(&self) -> Result<crate::types::InferredPowerProfile> {
         Ok(crate::types::InferredPowerProfile {
             boost: self.turbo_enabled()?,
             scaling_governor: self.scaling_governor()?,
             energy_preference: self.energy_preference()?,
+            maximum_frequency: utils::maximum_frequency().await?,
         })
     }
 

@@ -9,6 +9,7 @@ pub(crate) struct InferredPowerProfile {
     pub(crate) boost: bool,
     pub(crate) energy_preference: EnergyPreference,
     pub(crate) scaling_governor: ScalingGovernor,
+    pub(crate) maximum_frequency: u32,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, zvariant::Value, zvariant::OwnedValue, Type)]

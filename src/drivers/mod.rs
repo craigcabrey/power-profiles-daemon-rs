@@ -14,7 +14,7 @@ pub(crate) struct DriverModule<'a> {
 #[async_trait]
 pub(crate) trait Driver: Send + Sync {
     async fn activate(&self, power_profile: crate::types::PowerProfile) -> Result<()>;
-    fn current(&self) -> Result<crate::types::InferredPowerProfile>;
+    async fn current(&self) -> Result<crate::types::InferredPowerProfile>;
     fn name(&self) -> String;
 }
 

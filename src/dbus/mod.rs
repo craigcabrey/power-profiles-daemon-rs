@@ -39,7 +39,7 @@ impl Handler {
     async fn active_profile(&self) -> anyhow::Result<String, zbus::fdo::Error> {
         log::debug!("Active profile being requested!");
 
-        match self.driver.current() {
+        match self.driver.current().await {
             Ok(profile) => match self.settings.profile_by_inferred(profile) {
                 Some(profile) => {
                     log::debug!("Returning active profile: {}", profile.name);

@@ -16,10 +16,11 @@ impl crate::drivers::Driver for Driver {
         Ok(())
     }
 
-    fn current(&self) -> Result<crate::types::InferredPowerProfile> {
+    async fn current(&self) -> Result<crate::types::InferredPowerProfile> {
         Ok(crate::types::InferredPowerProfile {
             boost: true,
             energy_preference: crate::types::EnergyPreference::Performance,
+            maximum_frequency: 4000000,
             scaling_governor: crate::types::ScalingGovernor::Performance,
         })
     }
