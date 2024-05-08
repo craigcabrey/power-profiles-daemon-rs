@@ -76,7 +76,7 @@ impl crate::drivers::Driver for Driver {
 
         log::debug!("Writing to /sys/devices/system/cpu/cpufreq/policy*/scaling_governor");
 
-        utils::cores(&utils::online_cpus().await?)
+        utils::online_cpu_ids(&utils::online_cpus().await?)
             .await?
             .into_iter()
             .map(|core_id| {
@@ -95,7 +95,7 @@ impl crate::drivers::Driver for Driver {
             "Writing to /sys/devices/system/cpu/cpufreq/policy*/energy_performance_preference"
         );
 
-        utils::cores(&utils::online_cpus().await?)
+        utils::online_cpu_ids(&utils::online_cpus().await?)
             .await?
             .into_iter()
             .map(|core_id| {
