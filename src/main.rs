@@ -61,23 +61,32 @@ async fn main() -> Result<()> {
             as fn() -> Result<zbus::ConnectionBuilder<'static>, zbus::Error>;
     }
 
+    // Hold references to all DBus connections, otherwise they die
+    let mut connections = Vec::new();
+
     if !args.disable_upower {
         log::info!("Starting upower interface handler");
 
-        let _conn = bus_type()?
-            .name("org.freedesktop.UPower.PowerProfiles")?
-            .serve_at("/org/freedesktop/UPower/PowerProfiles", handler)?
-            .build()
-            .await?;
+        connections.push(
+            bus_type()?
+                .name("org.freedesktop.UPower.PowerProfiles")?
+                .serve_at("/org/freedesktop/UPower/PowerProfiles", handler)?
+                .build()
+                .await?,
+        );
     }
 
-    log::info!("Starting legacy interface handler");
+    if !args.disable_legacy {
+        log::info!("Starting legacy interface handler");
 
-    let _legacy_conn = bus_type()?
-        .name("net.hadess.PowerProfiles")?
-        .serve_at("/net/hadess/PowerProfiles", legacy_handler)?
-        .build()
-        .await?;
+        connections.push(
+            bus_type()?
+                .name("net.hadess.PowerProfiles")?
+                .serve_at("/net/hadess/PowerProfiles", legacy_handler)?
+                .build()
+                .await?,
+        );
+    }
 
     Ok(pending::<()>().await)
 }
