@@ -58,6 +58,8 @@ impl Driver {
 impl crate::drivers::Driver for Driver {
     // TODO: Figure out a way to make this atomic
     async fn activate(&self, power_profile: crate::types::PowerProfile) -> Result<()> {
+        log::debug!("Activating profile {:?}", power_profile);
+
         if self.dry_run {
             log::debug!(
                 "Would have activated power profile {}",
@@ -77,8 +79,8 @@ impl crate::drivers::Driver for Driver {
             log::warn!("Boost specified, but the current mode does not support it!");
         }
 
-        utils::activate_scaling_governor(self.scaling_governor().await?).await?;
-        utils::activate_energy_preference(self.energy_preference().await?).await?;
+        utils::activate_scaling_governor(power_profile.scaling_governor).await?;
+        utils::activate_energy_preference(power_profile.energy_preference).await?;
 
         Ok(())
     }
