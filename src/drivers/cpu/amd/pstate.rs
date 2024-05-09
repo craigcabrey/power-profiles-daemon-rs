@@ -65,7 +65,7 @@ impl Driver {
 #[async_trait]
 impl crate::drivers::Driver for Driver {
     // TODO: Figure out a way to make this atomic
-    async fn activate(&self, power_profile: super::super::types::PowerProfile) -> Result<()> {
+    async fn activate(&self, power_profile: &super::super::types::PowerProfile) -> Result<()> {
         log::debug!("Activating profile {:?}", power_profile);
 
         if self.dry_run {
@@ -100,8 +100,8 @@ impl crate::drivers::Driver for Driver {
         })
     }
 
-    fn name(&self) -> String {
-        self.name.clone()
+    fn name(&self) -> &str {
+        &self.name
     }
 }
 

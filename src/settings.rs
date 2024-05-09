@@ -66,8 +66,8 @@ impl Settings {
         &self.profiles
     }
 
-    pub fn profile_by_name(&self, profile_name: &String) -> Option<PowerProfile> {
-        self.profiles.get(profile_name).cloned()
+    pub fn profile_by_name(&self, profile_name: &String) -> Option<&PowerProfile> {
+        self.profiles.get(profile_name)
     }
 
     pub fn profile_by_inferred(

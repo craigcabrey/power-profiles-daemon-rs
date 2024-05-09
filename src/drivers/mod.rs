@@ -9,9 +9,9 @@ pub(crate) mod cpu;
 
 #[async_trait]
 pub(crate) trait Driver: Send + Sync {
-    async fn activate(&self, power_profile: cpu::types::PowerProfile) -> Result<()>;
+    async fn activate(&self, power_profile: &cpu::types::PowerProfile) -> Result<()>;
     async fn current(&self) -> Result<crate::types::InferredPowerProfile>;
-    fn name(&self) -> String;
+    fn name(&self) -> &str;
 }
 
 #[derive(Clone)]
@@ -20,8 +20,8 @@ pub(crate) struct DriverSet {
 }
 
 impl DriverSet {
-    pub async fn activate(&self, power_profile: crate::types::PowerProfile) -> Result<()> {
-        self.cpu.activate(power_profile.cpu).await
+    pub async fn activate(&self, power_profile: &crate::types::PowerProfile) -> Result<()> {
+        self.cpu.activate(&power_profile.cpu).await
 
         // futures::future::join_all(
         //     self.cpu

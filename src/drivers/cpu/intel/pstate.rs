@@ -53,7 +53,7 @@ impl Driver {
 
 #[async_trait]
 impl crate::drivers::Driver for Driver {
-    async fn activate(&self, power_profile: super::super::types::PowerProfile) -> Result<()> {
+    async fn activate(&self, power_profile: &super::super::types::PowerProfile) -> Result<()> {
         if self.dry_run {
             log::debug!("Would have activated power profile {:#?}", power_profile);
 
@@ -76,8 +76,8 @@ impl crate::drivers::Driver for Driver {
         })
     }
 
-    fn name(&self) -> String {
-        "intel_pstate".to_string()
+    fn name(&self) -> &str {
+        "intel_pstate"
     }
 }
 

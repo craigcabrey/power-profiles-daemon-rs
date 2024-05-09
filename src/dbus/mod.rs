@@ -103,7 +103,9 @@ impl Handler {
             .profiles()
             .clone()
             .into_values()
-            .map(|profile| types::PowerProfile::new(&profile, self.driver_set.cpu.name()))
+            .map(|profile| {
+                types::PowerProfile::new(&profile, self.driver_set.cpu.name().to_string())
+            })
             .collect())
     }
 
@@ -142,7 +144,7 @@ impl Handler {
         );
 
         match self.settings.profiles().get(profile) {
-            Some(profile) => match self.driver_set.activate(profile.clone()).await {
+            Some(profile) => match self.driver_set.activate(profile).await {
                 Ok(()) => Ok(cookie),
                 Err(err) => Err(zbus::fdo::Error::Failed(err.to_string())),
             },
