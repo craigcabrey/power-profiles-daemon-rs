@@ -43,7 +43,7 @@ async fn main() -> Result<()> {
     pretty_env_logger::init();
     let args = Args::parse();
     let settings = settings::Settings::build(&args.config)?;
-    let driver_set = drivers::probe().await?;
+    let driver_set = drivers::probe(&settings).await?;
 
     log::trace!("Loaded {:#?}", settings);
 

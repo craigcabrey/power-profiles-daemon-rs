@@ -1,15 +1,20 @@
 use anyhow::{Context, Result};
 use async_std::fs;
 use async_trait::async_trait;
-use std::str::FromStr;
+use serde::Deserialize;
+use std::{collections::HashMap, str::FromStr};
 
 use super::super::types::{EnergyPreference, ScalingGovernor};
 use crate::drivers::cpu::utils;
+
+#[derive(Deserialize)]
+pub(crate) struct DriverSettings {}
 
 pub(crate) struct Driver {
     dry_run: bool,
     name: String,
     status: Status,
+    _profile_driver_settings: HashMap<String, DriverSettings>,
 }
 
 impl Driver {
@@ -19,11 +24,16 @@ impl Driver {
     const SCALING_GOVERNOR: &'static str =
         "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor";
 
-    pub async fn new(dry_run: bool, name: String) -> Result<Self> {
+    pub async fn new(
+        dry_run: bool,
+        name: String,
+        profile_driver_settings: HashMap<String, DriverSettings>,
+    ) -> Result<Self> {
         Ok(Self {
             dry_run: dry_run,
             name: name,
             status: Status::current().await?,
+            _profile_driver_settings: profile_driver_settings,
         })
     }
 

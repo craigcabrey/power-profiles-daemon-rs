@@ -7,6 +7,7 @@ use async_std::fs;
 use async_trait::async_trait;
 
 use super::super::cpu::types::{EnergyPreference, ScalingGovernor};
+use super::types::PowerProfile;
 use crate::drivers::cpu::utils;
 
 const AFFECTED_CPUS: &'static str = "affected_cpus";
@@ -67,7 +68,9 @@ impl Driver {
     }
 }
 
-pub async fn probe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
+pub async fn probe(
+    profiles: &Vec<PowerProfile>,
+) -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
     let driver = Driver::from_system().await?;
     log::trace!("Loaded {:#?}", driver);
     Ok(Arc::new(driver))

@@ -3,6 +3,8 @@ use std::sync::Arc;
 use anyhow::Result;
 use async_trait::async_trait;
 
+use super::types::PowerProfile;
+
 pub struct Driver {}
 
 #[async_trait]
@@ -26,6 +28,8 @@ impl crate::drivers::Driver for Driver {
     }
 }
 
-pub async fn probe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
+pub async fn probe(
+    _profiles: &Vec<PowerProfile>,
+) -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
     Ok(Arc::new(Driver {}))
 }

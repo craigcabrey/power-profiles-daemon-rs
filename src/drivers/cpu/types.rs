@@ -11,12 +11,23 @@ pub(crate) struct InferredPowerProfile {
     pub(crate) maximum_frequency: u32,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct PowerProfile {
+    pub(crate) name: Option<String>,
     pub(crate) boost: bool,
     pub(crate) energy_preference: EnergyPreference,
     pub(crate) scaling_governor: ScalingGovernor,
     pub(crate) maximum_frequency: Option<u32>,
+    pub(crate) driver_options: Option<config::Value>,
+}
+
+impl From<crate::types::PowerProfile> for PowerProfile {
+    fn from(value: crate::types::PowerProfile) -> Self {
+        Self {
+            name: Some(value.name.clone()),
+            ..value.cpu.to_owned()
+        }
+    }
 }
 
 // TODO: serde doesn't recognize snake_case from the config json...

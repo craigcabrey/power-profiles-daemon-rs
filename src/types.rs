@@ -9,7 +9,7 @@ pub(crate) struct InferredPowerProfile {
     pub(crate) maximum_frequency: u32,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub(crate) struct PowerProfile {
     pub(crate) cpu: crate::drivers::cpu::types::PowerProfile,
     #[serde(rename = "$key$")]

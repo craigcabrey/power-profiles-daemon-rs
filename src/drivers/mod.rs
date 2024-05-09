@@ -3,6 +3,8 @@ use std::sync::Arc;
 use anyhow::Result;
 use async_trait::async_trait;
 
+use self::cpu::types::PowerProfile;
+
 pub(crate) mod cpu;
 
 #[async_trait]
@@ -33,22 +35,30 @@ impl DriverSet {
     }
 }
 
-pub(crate) async fn probe() -> Result<DriverSet> {
-    let cpu_drivers = cpu::probe()
-        .await
-        .into_iter()
-        .filter_map(|driver| match driver {
-            Ok(res) => {
-                log::info!("Using driver {}", res.name());
-                Some(res)
-            }
-            Err(err) => {
-                log::debug!("Skipping driver: {}", err);
-                None
-            }
-        })
-        .collect::<Vec<_>>();
+pub(crate) async fn probe(settings: &crate::settings::Settings) -> Result<DriverSet> {
+    let cpu_drivers = cpu::probe(
+        &settings
+            .profiles()
+            .clone()
+            .into_values()
+            .map(|profile| PowerProfile::from(profile))
+            .collect(),
+    )
+    .await
+    .into_iter()
+    .filter_map(|driver| match driver {
+        Ok(res) => {
+            log::trace!("Loaded driver {:#?}", res.name());
+            Some(res)
+        }
+        Err(err) => {
+            log::debug!("Skipping driver: {}", err);
+            None
+        }
+    })
+    .collect::<Vec<_>>();
 
+    // FIXME
     let cpu_driver = cpu_drivers.into_iter().next();
 
     Ok(DriverSet {

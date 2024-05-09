@@ -14,7 +14,7 @@ pub(crate) async fn activate_energy_preference(
 
     futures::stream::iter(online_cpu_id_iter(&online_cpus().await?)?)
         .then(|core_id| async move {
-            log::debug!(
+            log::trace!(
                 "Writing {} to /sys/devices/system/cpu/cpufreq/policy{}/energy_performance_preference",
                 energy_preference.to_string(),
                 core_id,
@@ -37,18 +37,18 @@ pub(crate) async fn activate_energy_preference(
 pub(crate) async fn activate_maximum_frequency(maximum_frequency: Option<u32>) -> Result<()> {
     let value = match maximum_frequency {
         Some(value) => {
-            log::info!("Activating maximum frequency {}", value);
+            log::debug!("Activating maximum frequency {}", value);
             value
         }
         None => {
-            log::info!("Resetting maximum frequency");
+            log::debug!("Resetting maximum frequency");
             MAX_RESET_FREQUENCY
         }
     };
 
     futures::stream::iter(online_cpu_id_iter(&online_cpus().await?)?)
         .then(|core_id| async move {
-            log::debug!(
+            log::trace!(
                 "Writing {} to /sys/devices/system/cpu/cpufreq/policy{}/scaling_max_freq",
                 value,
                 core_id,
@@ -75,7 +75,7 @@ pub(crate) async fn activate_scaling_governor(
 
     futures::stream::iter(online_cpu_id_iter(&online_cpus().await?)?)
         .then(|core_id| async move {
-            log::debug!(
+            log::trace!(
                 "Writing {} to /sys/devices/system/cpu/cpufreq/policy{}/scaling_governor",
                 scaling_governor.to_string(),
                 core_id,
