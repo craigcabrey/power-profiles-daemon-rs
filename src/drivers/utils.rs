@@ -4,6 +4,8 @@ use futures::{StreamExt, TryStreamExt};
 
 use crate::types::EnergyPreference;
 
+// If no max frequency specified, reset it to max by specifying a ludicrous value, like 100 GHz
+const MAX_RESET_FREQUENCY: u32 = 100000000;
 const MAXIMUM_FREQUENCY: &'static str = "/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq";
 const ONLINE_CPUS: &'static str = "/sys/devices/system/cpu/online";
 
@@ -24,6 +26,40 @@ pub(crate) async fn activate_energy_preference(energy_preference: EnergyPreferen
                     core_id,
                 ),
                 energy_preference.to_string(),
+            )
+            .await
+        })
+        .try_collect()
+        .await
+        .map_err(anyhow::Error::from)
+}
+
+pub(crate) async fn activate_maximum_frequency(maximum_frequency: Option<u32>) -> Result<()> {
+    let value = match maximum_frequency {
+        Some(value) => {
+            log::info!("Activating maximum frequency {}", value);
+            value
+        }
+        None => {
+            log::info!("Resetting maximum frequency");
+            MAX_RESET_FREQUENCY
+        }
+    };
+
+    futures::stream::iter(online_cpu_id_iter(&online_cpus().await?)?)
+        .then(|core_id| async move {
+            log::debug!(
+                "Writing {} to /sys/devices/system/cpu/cpufreq/policy{}/scaling_max_freq",
+                value,
+                core_id,
+            );
+
+            fs::write(
+                format!(
+                    "/sys/devices/system/cpu/cpufreq/policy{}/scaling_max_freq",
+                    core_id,
+                ),
+                value.to_string(),
             )
             .await
         })

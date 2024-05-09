@@ -9,7 +9,8 @@
     "power-saver": {
       "boost": true,
       "energy_preference": "power",
-      "scaling_governor": "powersave"
+      "scaling_governor": "powersave",
+      "maximum_frequency": 2000000
     },
     "performance": {
       "boost": true,

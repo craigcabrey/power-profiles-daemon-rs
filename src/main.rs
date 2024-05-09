@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
     let args = Args::parse();
     let settings = settings::Settings::build(&args.config)?;
 
-    log::debug!("Loaded {:?}", settings);
+    log::trace!("Loaded {:#?}", settings);
 
     let handler = dbus::Handler::new(drivers::probe(args.driver.clone())?, settings.clone());
     let legacy_handler = dbus::legacy::Handler::new(drivers::probe(args.driver.clone())?, settings);

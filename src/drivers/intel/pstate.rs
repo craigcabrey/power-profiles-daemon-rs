@@ -66,10 +66,9 @@ impl crate::drivers::Driver for Driver {
             return Ok(());
         }
 
-        log::debug!("Writing to /sys/devices/system/cpu/cpufreq/policy*/scaling_governor");
-
-        utils::activate_scaling_governor(self.scaling_governor().await?).await?;
-        utils::activate_energy_preference(self.energy_preference().await?).await?;
+        utils::activate_maximum_frequency(power_profile.maximum_frequency).await?;
+        utils::activate_scaling_governor(power_profile.scaling_governor).await?;
+        utils::activate_energy_preference(power_profile.energy_preference).await?;
 
         Ok(())
     }

@@ -79,6 +79,7 @@ impl crate::drivers::Driver for Driver {
             log::warn!("Boost specified, but the current mode does not support it!");
         }
 
+        utils::activate_maximum_frequency(power_profile.maximum_frequency).await?;
         utils::activate_scaling_governor(power_profile.scaling_governor).await?;
         utils::activate_energy_preference(power_profile.energy_preference).await?;
 
