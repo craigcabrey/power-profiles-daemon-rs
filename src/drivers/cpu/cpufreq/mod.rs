@@ -6,6 +6,7 @@ use anyhow::Result;
 use async_std::fs;
 use async_trait::async_trait;
 
+use super::super::cpu::types::{EnergyPreference, ScalingGovernor};
 use crate::drivers::cpu::utils;
 
 const AFFECTED_CPUS: &'static str = "affected_cpus";
@@ -33,7 +34,7 @@ pub(crate) struct Driver {
 
 #[async_trait]
 impl crate::drivers::Driver for Driver {
-    async fn activate(&self, _power_profile: crate::types::PowerProfile) -> Result<()> {
+    async fn activate(&self, _power_profile: super::super::cpu::types::PowerProfile) -> Result<()> {
         log::debug!("Activating!");
         Ok(())
     }
@@ -41,9 +42,9 @@ impl crate::drivers::Driver for Driver {
     async fn current(&self) -> Result<crate::types::InferredPowerProfile> {
         Ok(crate::types::InferredPowerProfile {
             boost: true,
-            energy_preference: crate::types::EnergyPreference::Performance,
+            energy_preference: EnergyPreference::Performance,
             maximum_frequency: 4000000,
-            scaling_governor: crate::types::ScalingGovernor::Performance,
+            scaling_governor: ScalingGovernor::Performance,
         })
     }
 

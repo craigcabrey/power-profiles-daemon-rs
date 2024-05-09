@@ -7,7 +7,7 @@ pub struct Driver {}
 
 #[async_trait]
 impl crate::drivers::Driver for Driver {
-    async fn activate(&self, _power_profile: crate::types::PowerProfile) -> Result<()> {
+    async fn activate(&self, _power_profile: super::super::cpu::types::PowerProfile) -> Result<()> {
         log::debug!("Activating!");
         Ok(())
     }
@@ -15,9 +15,9 @@ impl crate::drivers::Driver for Driver {
     async fn current(&self) -> Result<crate::types::InferredPowerProfile> {
         Ok(crate::types::InferredPowerProfile {
             boost: true,
-            energy_preference: crate::types::EnergyPreference::Performance,
+            energy_preference: super::super::cpu::types::EnergyPreference::Performance,
             maximum_frequency: 4000000,
-            scaling_governor: crate::types::ScalingGovernor::Performance,
+            scaling_governor: super::super::cpu::types::ScalingGovernor::Performance,
         })
     }
 

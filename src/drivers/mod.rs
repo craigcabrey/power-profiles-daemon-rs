@@ -3,11 +3,11 @@ use std::sync::Arc;
 use anyhow::Result;
 use async_trait::async_trait;
 
-mod cpu;
+pub(crate) mod cpu;
 
 #[async_trait]
 pub(crate) trait Driver: Send + Sync {
-    async fn activate(&self, power_profile: crate::types::PowerProfile) -> Result<()>;
+    async fn activate(&self, power_profile: cpu::types::PowerProfile) -> Result<()>;
     async fn current(&self) -> Result<crate::types::InferredPowerProfile>;
     fn name(&self) -> String;
 }
@@ -19,7 +19,7 @@ pub(crate) struct DriverSet {
 
 impl DriverSet {
     pub async fn activate(&self, power_profile: crate::types::PowerProfile) -> Result<()> {
-        self.cpu.activate(power_profile).await
+        self.cpu.activate(power_profile.cpu).await
 
         // futures::future::join_all(
         //     self.cpu

@@ -2,14 +2,14 @@ use anyhow::Result;
 use async_std::fs;
 use futures::{StreamExt, TryStreamExt};
 
-use crate::types::EnergyPreference;
-
 // If no max frequency specified, reset it to max by specifying a ludicrous value, like 100 GHz
 const MAX_RESET_FREQUENCY: u32 = 100000000;
 const MAXIMUM_FREQUENCY: &'static str = "/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq";
 const ONLINE_CPUS: &'static str = "/sys/devices/system/cpu/online";
 
-pub(crate) async fn activate_energy_preference(energy_preference: EnergyPreference) -> Result<()> {
+pub(crate) async fn activate_energy_preference(
+    energy_preference: super::types::EnergyPreference,
+) -> Result<()> {
     log::info!("Activating energy preference {:?}", energy_preference);
 
     futures::stream::iter(online_cpu_id_iter(&online_cpus().await?)?)
@@ -69,7 +69,7 @@ pub(crate) async fn activate_maximum_frequency(maximum_frequency: Option<u32>) -
 }
 
 pub(crate) async fn activate_scaling_governor(
-    scaling_governor: crate::types::ScalingGovernor,
+    scaling_governor: super::types::ScalingGovernor,
 ) -> Result<()> {
     log::info!("Activating scaling governor {:?}", scaling_governor);
 

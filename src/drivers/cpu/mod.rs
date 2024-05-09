@@ -6,7 +6,7 @@ mod amd;
 pub(crate) mod cpufreq;
 mod dummy;
 mod intel;
-mod types;
+pub(crate) mod types;
 mod utils;
 
 pub async fn probe() -> Vec<Result<std::sync::Arc<dyn Driver + Sync + Send>>> {

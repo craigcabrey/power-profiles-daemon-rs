@@ -3,10 +3,9 @@ use async_std::fs;
 use async_trait::async_trait;
 use std::str::FromStr;
 
-use crate::{
-    drivers::cpu::utils,
-    types::{EnergyPreference, ScalingGovernor},
-};
+use crate::drivers::cpu::utils;
+
+use super::super::types::{EnergyPreference, ScalingGovernor};
 
 pub(crate) struct Driver {
     dry_run: bool,
@@ -54,12 +53,9 @@ impl Driver {
 
 #[async_trait]
 impl crate::drivers::Driver for Driver {
-    async fn activate(&self, power_profile: crate::types::PowerProfile) -> Result<()> {
+    async fn activate(&self, power_profile: super::super::types::PowerProfile) -> Result<()> {
         if self.dry_run {
-            log::debug!(
-                "Would have activated power profile {}",
-                power_profile.to_string()
-            );
+            log::debug!("Would have activated power profile {:#?}", power_profile);
 
             return Ok(());
         }
