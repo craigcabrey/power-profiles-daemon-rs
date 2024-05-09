@@ -8,10 +8,16 @@ const MAXIMUM_FREQUENCY: &'static str = "/sys/devices/system/cpu/cpufreq/policy0
 const ONLINE_CPUS: &'static str = "/sys/devices/system/cpu/online";
 
 pub(crate) async fn activate_energy_preference(energy_preference: EnergyPreference) -> Result<()> {
-    log::debug!("Writing to /sys/devices/system/cpu/cpufreq/policy*/energy_performance_preference");
+    log::info!("Activating energy preference {:?}", energy_preference);
 
     futures::stream::iter(online_cpu_id_iter(&online_cpus().await?)?)
         .then(|core_id| async move {
+            log::debug!(
+                "Writing {} to /sys/devices/system/cpu/cpufreq/policy{}/energy_performance_preference",
+                energy_preference.to_string(),
+                core_id,
+            );
+
             fs::write(
                 format!(
                     "/sys/devices/system/cpu/cpufreq/policy{:?}/energy_performance_preference",
@@ -29,10 +35,16 @@ pub(crate) async fn activate_energy_preference(energy_preference: EnergyPreferen
 pub(crate) async fn activate_scaling_governor(
     scaling_governor: crate::types::ScalingGovernor,
 ) -> Result<()> {
-    log::debug!("Writing to /sys/devices/system/cpu/cpufreq/policy*/scaling_governor");
+    log::info!("Activating scaling governor {:?}", scaling_governor);
 
     futures::stream::iter(online_cpu_id_iter(&online_cpus().await?)?)
         .then(|core_id| async move {
+            log::debug!(
+                "Writing {} to /sys/devices/system/cpu/cpufreq/policy{}/scaling_governor",
+                scaling_governor.to_string(),
+                core_id,
+            );
+
             fs::write(
                 format!(
                     "/sys/devices/system/cpu/cpufreq/policy{}/scaling_governor",
@@ -67,5 +79,5 @@ fn online_cpu_id_iter(online_cpus: &String) -> Result<impl Iterator<Item = u32> 
         .filter_map(|token| token.split_once("-"))
         // [["1","5"], ["7","9"], ["hello","world"]] -> [[1,5], [7,9]]]
         .filter_map(|(first, second)| first.parse::<u32>().ok().zip(second.parse::<u32>().ok()))
-        .flat_map(|(first, second)| (first..second).into_iter()))
+        .flat_map(|(first, second)| (first..=second).into_iter()))
 }

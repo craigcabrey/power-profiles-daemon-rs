@@ -56,7 +56,7 @@ impl Handler {
 
     #[zbus(property)]
     async fn set_active_profile(&mut self, name: String) -> anyhow::Result<(), zbus::fdo::Error> {
-        log::info!("Activating profile: {}", name);
+        log::info!("Request to activate profile {}", name);
 
         match self.settings.profile_by_name(&name) {
             Some(profile) => match self.driver.activate(profile).await {
