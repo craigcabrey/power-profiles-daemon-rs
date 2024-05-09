@@ -2,9 +2,11 @@ use std::sync::Arc;
 
 use anyhow::Result;
 
+use crate::drivers;
+
 mod pstate;
 
-pub(crate) const DRIVER: super::DriverModule = super::DriverModule {
+pub(crate) const DRIVER: drivers::DriverModule = drivers::DriverModule {
     name: "intel-pstate",
     probe: probe,
 };

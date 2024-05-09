@@ -16,11 +16,12 @@ pub(crate) struct Handler {
 
 impl Handler {
     pub fn new(
-        driver: std::sync::Arc<dyn drivers::Driver + Send + Sync>,
+        driver: Vec<std::sync::Arc<dyn drivers::Driver + Send + Sync>>,
         settings: Settings,
     ) -> Self {
         Self {
-            driver: driver,
+            // TODO: hack for now
+            driver: driver.iter().next().unwrap().to_owned(),
             profile_holds: HashMap::new(),
             settings,
         }

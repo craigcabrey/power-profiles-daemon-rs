@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use std::str::FromStr;
 
 use crate::{
-    drivers::utils,
+    drivers::cpu::utils,
     types::{EnergyPreference, ScalingGovernor},
 };
 

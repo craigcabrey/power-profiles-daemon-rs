@@ -3,7 +3,9 @@ use std::sync::Arc;
 use anyhow::Result;
 use async_trait::async_trait;
 
-pub(crate) const DRIVER: super::DriverModule = super::DriverModule {
+use crate::drivers;
+
+pub(crate) const DRIVER: drivers::DriverModule = drivers::DriverModule {
     name: "dummy",
     probe: probe,
 };

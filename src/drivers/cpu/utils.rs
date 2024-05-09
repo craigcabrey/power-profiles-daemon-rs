@@ -102,11 +102,11 @@ pub(crate) async fn maximum_frequency() -> Result<u32> {
         .parse()?)
 }
 
-async fn online_cpus() -> Result<String, std::io::Error> {
+pub(crate) async fn online_cpus() -> Result<String, std::io::Error> {
     fs::read_to_string(ONLINE_CPUS).await
 }
 
-fn online_cpu_id_iter(online_cpus: &String) -> Result<impl Iterator<Item = u32> + '_> {
+pub(crate) fn online_cpu_id_iter(online_cpus: &String) -> Result<impl Iterator<Item = u32> + '_> {
     Ok(online_cpus
         .trim()
         // "1-5,7-9" -> ["1-5", "7-9"]

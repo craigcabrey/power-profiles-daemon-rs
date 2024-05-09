@@ -2,10 +2,12 @@ use std::sync::Arc;
 
 use anyhow::Result;
 
+use crate::drivers;
+
 mod pstate;
 
 const SCALING_DRIVER_PATH: &str = "/sys/devices/system/cpu/cpufreq/policy0/scaling_driver";
-pub(crate) const DRIVER: super::DriverModule = super::DriverModule {
+pub(crate) const DRIVER: drivers::DriverModule = drivers::DriverModule {
     name: "amd-pstate",
     probe: probe,
 };
