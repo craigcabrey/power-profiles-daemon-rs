@@ -10,7 +10,7 @@ const ONLINE_CPUS: &'static str = "/sys/devices/system/cpu/online";
 pub(crate) async fn activate_energy_preference(energy_preference: EnergyPreference) -> Result<()> {
     log::debug!("Writing to /sys/devices/system/cpu/cpufreq/policy*/energy_performance_preference");
 
-    futures::stream::iter(online_cpu_ids(&online_cpus().await?).await?)
+    futures::stream::iter(online_cpu_id_iter(&online_cpus().await?)?)
         .then(|core_id| async move {
             fs::write(
                 format!(
@@ -31,7 +31,7 @@ pub(crate) async fn activate_scaling_governor(
 ) -> Result<()> {
     log::debug!("Writing to /sys/devices/system/cpu/cpufreq/policy*/scaling_governor");
 
-    futures::stream::iter(online_cpu_ids(&online_cpus().await?).await?)
+    futures::stream::iter(online_cpu_id_iter(&online_cpus().await?)?)
         .then(|core_id| async move {
             fs::write(
                 format!(
@@ -47,18 +47,18 @@ pub(crate) async fn activate_scaling_governor(
         .map_err(anyhow::Error::from)
 }
 
-pub async fn maximum_frequency() -> Result<u32> {
+pub(crate) async fn maximum_frequency() -> Result<u32> {
     Ok(fs::read_to_string(MAXIMUM_FREQUENCY)
         .await?
         .trim()
         .parse()?)
 }
 
-pub async fn online_cpus() -> Result<String, std::io::Error> {
+async fn online_cpus() -> Result<String, std::io::Error> {
     fs::read_to_string(ONLINE_CPUS).await
 }
 
-pub async fn online_cpu_ids(online_cpus: &String) -> Result<impl Iterator<Item = u32> + '_> {
+fn online_cpu_id_iter(online_cpus: &String) -> Result<impl Iterator<Item = u32> + '_> {
     Ok(online_cpus
         .trim()
         // "1-5,7-9" -> ["1-5", "7-9"]
