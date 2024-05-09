@@ -42,25 +42,24 @@ impl TryInto<Settings> for RawSettings {
     type Error = anyhow::Error;
 
     fn try_into(self) -> Result<Settings> {
-        Ok(Settings::new(
+        Settings::new(
             self.default,
             self.profiles
                 .into_iter()
                 .map(|profile| (profile.name.clone(), profile.into()))
                 .collect(),
-        )?)
+        )
     }
 }
 
 impl Settings {
     pub fn build(config_path: &str) -> Result<Self> {
-        let raw_settings = Config::builder()
+        Config::builder()
             .add_source(config::File::with_name(config_path))
             .add_source(config::Environment::with_prefix("PPD"))
             .build()?
-            .try_deserialize::<RawSettings>()?;
-
-        Ok(raw_settings.try_into()?)
+            .try_deserialize::<RawSettings>()?
+            .try_into()
     }
 
     pub fn profiles(&self) -> &HashMap<String, PowerProfile> {
