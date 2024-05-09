@@ -42,16 +42,12 @@ struct Args {
 async fn main() -> Result<()> {
     pretty_env_logger::init();
     let args = Args::parse();
+    let settings = settings::Settings::build(&args.config)?;
 
-    let handler = dbus::Handler::new(
-        drivers::probe(args.driver.clone())?,
-        settings::Settings::build(&args.config)?,
-    );
+    log::debug!("Loaded {:?}", settings);
 
-    let legacy_handler = dbus::legacy::Handler::new(
-        drivers::probe(args.driver.clone())?,
-        settings::Settings::build(&args.config)?,
-    );
+    let handler = dbus::Handler::new(drivers::probe(args.driver.clone())?, settings.clone());
+    let legacy_handler = dbus::legacy::Handler::new(drivers::probe(args.driver.clone())?, settings);
 
     let mut bus_type = connection::Builder::system
         as fn() -> Result<zbus::ConnectionBuilder<'static>, zbus::Error>;
