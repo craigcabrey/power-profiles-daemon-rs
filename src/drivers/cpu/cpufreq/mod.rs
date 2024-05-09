@@ -48,7 +48,7 @@ impl crate::drivers::Driver for Driver {
     }
 
     fn name(&self) -> String {
-        "dummy".to_string()
+        "cpufreq".to_string()
     }
 }
 
