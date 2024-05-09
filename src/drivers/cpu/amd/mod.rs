@@ -2,22 +2,11 @@ use std::sync::Arc;
 
 use anyhow::Result;
 
-use crate::drivers;
-
 mod pstate;
 
 const SCALING_DRIVER_PATH: &str = "/sys/devices/system/cpu/cpufreq/policy0/scaling_driver";
-pub(crate) const DRIVER: drivers::DriverModule = drivers::DriverModule {
-    name: "amd-pstate",
-    probe: probe,
-};
 
-// TODO: asyncify driver probing
-pub fn probe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
-    futures::executor::block_on(aprobe())
-}
-
-async fn aprobe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
+pub async fn probe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
     let driver = std::fs::read_to_string(SCALING_DRIVER_PATH)?;
 
     match driver.trim() {

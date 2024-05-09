@@ -6,19 +6,15 @@ use crate::{drivers, settings::Settings, types::PowerProfileHold};
 
 #[derive(Clone)]
 pub(crate) struct Handler {
-    driver: std::sync::Arc<dyn drivers::Driver + Send + Sync>,
+    driver_set: drivers::DriverSet,
     profile_holds: HashMap<u32, PowerProfileHold>,
     settings: Settings,
 }
 
 impl Handler {
-    pub fn new(
-        driver: Vec<std::sync::Arc<dyn drivers::Driver + Send + Sync>>,
-        settings: Settings,
-    ) -> Self {
+    pub fn new(driver_set: drivers::DriverSet, settings: Settings) -> Self {
         Self {
-            // TODO: hack for now
-            driver: driver.iter().next().unwrap().to_owned(),
+            driver_set: driver_set,
             profile_holds: HashMap::new(),
             settings,
         }
@@ -37,7 +33,7 @@ impl Handler {
     async fn active_profile(&self) -> anyhow::Result<String, zbus::fdo::Error> {
         log::debug!("Active profile being requested!");
 
-        match self.driver.current().await {
+        match self.driver_set.cpu.current().await {
             Ok(profile) => match self.settings.profile_by_inferred(profile) {
                 Some(profile) => {
                     log::debug!("Returning active profile: {}", profile.name);
@@ -57,7 +53,7 @@ impl Handler {
         log::info!("Request to activate profile {}", name);
 
         match self.settings.profile_by_name(&name) {
-            Some(profile) => match self.driver.activate(profile).await {
+            Some(profile) => match self.driver_set.activate(profile).await {
                 Ok(()) => Ok(()),
                 Err(err) => Err(zbus::fdo::Error::Failed(format!("{:?}", err))),
             },
@@ -96,7 +92,9 @@ impl Handler {
     }
 
     #[zbus(property)]
-    async fn profiles(&self) -> anyhow::Result<Vec<super::types::PowerProfile>, zbus::fdo::Error> {
+    async fn profiles(
+        &self,
+    ) -> anyhow::Result<Vec<crate::dbus::types::PowerProfile>, zbus::fdo::Error> {
         log::debug!("Profiles being requested!");
 
         Ok(self
@@ -104,7 +102,9 @@ impl Handler {
             .profiles()
             .clone()
             .into_values()
-            .map(|profile| super::types::PowerProfile::new(&profile, self.driver.name()))
+            .map(|profile| {
+                crate::dbus::types::PowerProfile::new(&profile, self.driver_set.cpu.name())
+            })
             .collect())
     }
 
@@ -143,7 +143,7 @@ impl Handler {
         );
 
         match self.settings.profiles().get(profile) {
-            Some(profile) => match self.driver.activate(profile.clone()).await {
+            Some(profile) => match self.driver_set.activate(profile.clone()).await {
                 Ok(()) => Ok(cookie),
                 Err(err) => Err(zbus::fdo::Error::Failed(err.to_string())),
             },

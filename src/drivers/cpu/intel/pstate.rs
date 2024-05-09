@@ -10,7 +10,6 @@ use crate::{
 
 pub(crate) struct Driver {
     dry_run: bool,
-    name: String,
     _status: Status,
 }
 
@@ -21,10 +20,9 @@ impl Driver {
     const SCALING_GOVERNOR: &'static str =
         "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor";
 
-    pub async fn new(dry_run: bool, name: String) -> Result<Self> {
+    pub async fn new(dry_run: bool) -> Result<Self> {
         Ok(Self {
             dry_run: dry_run,
-            name,
             _status: Status::current().await?,
         })
     }
@@ -83,7 +81,7 @@ impl crate::drivers::Driver for Driver {
     }
 
     fn name(&self) -> String {
-        self.name.clone()
+        "intel_pstate".to_string()
     }
 }
 

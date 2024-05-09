@@ -2,27 +2,15 @@ use std::sync::Arc;
 
 use anyhow::Result;
 
-use crate::drivers;
-
 mod pstate;
 
-pub(crate) const DRIVER: drivers::DriverModule = drivers::DriverModule {
-    name: "intel-pstate",
-    probe: probe,
-};
 const SCALING_DRIVER_PATH: &str = "/sys/devices/system/cpu/cpufreq/policy0/scaling_driver";
 
-pub fn probe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
-    futures::executor::block_on(aprobe())
-}
-
-async fn aprobe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
+pub async fn probe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
     let driver = async_std::fs::read_to_string(SCALING_DRIVER_PATH).await?;
 
     match driver.trim() {
-        "intel_pstate" => Ok(Arc::new(
-            pstate::Driver::new(false, DRIVER.name.to_string()).await?,
-        )),
+        "intel_pstate" => Ok(Arc::new(pstate::Driver::new(false).await?)),
         _ => Err(anyhow::anyhow!("unsupported driver {}", driver.trim())),
     }
 }

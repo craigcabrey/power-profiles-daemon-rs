@@ -26,11 +26,6 @@ const SCALING_SETSPEED: &'static str = "scaling_setspeed";
 
 use crate::drivers;
 
-pub(crate) const DRIVER: drivers::DriverModule = drivers::DriverModule {
-    name: "cpufreq",
-    probe: probe,
-};
-
 #[derive(Debug)]
 pub(crate) struct Driver {
     policies: Vec<Policy>,
@@ -71,11 +66,7 @@ impl Driver {
     }
 }
 
-pub fn probe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
-    Ok(futures::executor::block_on(aprobe())?)
-}
-
-pub async fn aprobe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
+pub async fn probe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
     let driver = Driver::from_system().await?;
     log::trace!("Loaded {:#?}", driver);
     Ok(Arc::new(driver))

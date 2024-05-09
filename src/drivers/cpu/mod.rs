@@ -1,3 +1,7 @@
+use anyhow::Result;
+
+use super::Driver;
+
 mod amd;
 pub(crate) mod cpufreq;
 mod dummy;
@@ -5,6 +9,11 @@ mod intel;
 mod types;
 mod utils;
 
-pub fn drivers() -> Vec<super::DriverModule<'static>> {
-    vec![amd::DRIVER, cpufreq::DRIVER, intel::DRIVER, dummy::DRIVER]
+pub async fn probe() -> Vec<Result<std::sync::Arc<dyn Driver + Sync + Send>>> {
+    vec![
+        amd::probe().await,
+        cpufreq::probe().await,
+        dummy::probe().await,
+        intel::probe().await,
+    ]
 }

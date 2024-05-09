@@ -3,12 +3,6 @@ use std::sync::Arc;
 use anyhow::Result;
 use async_trait::async_trait;
 
-use crate::drivers;
-
-pub(crate) const DRIVER: drivers::DriverModule = drivers::DriverModule {
-    name: "dummy",
-    probe: probe,
-};
 pub struct Driver {}
 
 #[async_trait]
@@ -32,6 +26,6 @@ impl crate::drivers::Driver for Driver {
     }
 }
 
-pub fn probe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
+pub async fn probe() -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
     Ok(Arc::new(Driver {}))
 }
