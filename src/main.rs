@@ -17,10 +17,6 @@ struct Args {
     #[arg(short, long, default_value = "config.json")]
     config: String,
 
-    /// Name of the driver to use
-    #[arg(long, default_value = "auto")]
-    driver: String,
-
     /// Best effort to avoid mutable operations
     #[arg(long, default_value_t = false)]
     dry_run: bool,
@@ -40,7 +36,9 @@ struct Args {
 
 #[async_std::main]
 async fn main() -> Result<()> {
-    pretty_env_logger::init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    log::info!("{} version {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+
     let args = Args::parse();
     let settings = settings::Settings::build(&args.config)?;
     let driver_set = drivers::probe(&settings).await?;
@@ -54,7 +52,7 @@ async fn main() -> Result<()> {
         as fn() -> Result<zbus::ConnectionBuilder<'static>, zbus::Error>;
 
     if args.user {
-        log::info!("Using the user session bus");
+        log::info!("Running on the user session bus, use for development only");
 
         bus_type = connection::Builder::session
             as fn() -> Result<zbus::ConnectionBuilder<'static>, zbus::Error>;
