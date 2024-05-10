@@ -1,41 +1,33 @@
 use serde::{Deserialize, Serialize};
 use zvariant::Type;
 
-#[derive(PartialEq)]
-pub(crate) struct InferredPowerProfile {
-    pub(crate) boost: bool,
-    pub(crate) energy_preference: super::drivers::cpu::types::EnergyPreference,
-    pub(crate) scaling_governor: super::drivers::cpu::types::ScalingGovernor,
-    pub(crate) maximum_frequency: u32,
-}
+use crate::drivers::cpu;
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub(crate) struct PowerProfile {
-    pub(crate) cpu: crate::drivers::cpu::types::PowerProfile,
+    pub(crate) cpu: cpu::types::PowerProfile,
     #[serde(rename = "$key$")]
     pub(crate) name: String,
-}
-
-impl PartialEq<InferredPowerProfile> for PowerProfile {
-    fn eq(&self, other: &InferredPowerProfile) -> bool {
-        // if self.cpu.boost != other.boost {
-        //     return false;
-        // }
-
-        // if self.cpu.energy_preference != other.energy_preference {
-        //     return false;
-        // }
-        // if self.cpu.scaling_governor != other.scaling_governor {
-        //     return false;
-        // }
-
-        true
-    }
 }
 
 impl ToString for PowerProfile {
     fn to_string(&self) -> String {
         format!("PowerProfile(name={}, cpu={:#?})", self.name, self.cpu,)
+    }
+}
+
+#[derive(PartialEq)]
+pub(crate) struct InferredPowerProfile {
+    pub(crate) cpu: Option<cpu::types::InferredPowerProfile>,
+}
+
+impl PartialEq<PowerProfile> for InferredPowerProfile {
+    fn eq(&self, other: &PowerProfile) -> bool {
+        let cpu_profile = self.cpu.as_ref().unwrap();
+        //other.cpu
+        let other_cpu_profile = &other.cpu;
+
+        cpu_profile == other_cpu_profile
     }
 }
 

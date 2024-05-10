@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use async_trait::async_trait;
 
-use super::types::PowerProfile;
+use crate::drivers::cpu;
 
 pub struct Driver {}
 
@@ -16,10 +16,7 @@ impl crate::drivers::Driver for Driver {
 
     async fn current(&self) -> Result<crate::types::InferredPowerProfile> {
         Ok(crate::types::InferredPowerProfile {
-            boost: true,
-            energy_preference: super::super::cpu::types::EnergyPreference::Performance,
-            maximum_frequency: 4000000,
-            scaling_governor: super::super::cpu::types::ScalingGovernor::Performance,
+            cpu: Some(cpu::types::InferredPowerProfile { cpu_profiles: None }),
         })
     }
 
@@ -29,7 +26,7 @@ impl crate::drivers::Driver for Driver {
 }
 
 pub async fn probe(
-    _profiles: &Vec<PowerProfile>,
+    _profiles: &Vec<cpu::types::PowerProfile>,
 ) -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
     Ok(Arc::new(Driver {}))
 }

@@ -1,12 +1,12 @@
 #![allow(unused)]
 
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
 use anyhow::Result;
 use async_std::fs;
 use async_trait::async_trait;
 
-use self::types::PowerProfile;
+use self::types::{EnergyPreference, InferredCpuPowerProfile, PowerProfile, ScalingGovernor};
 
 mod amd;
 mod dummy;
@@ -14,32 +14,39 @@ mod intel;
 pub(crate) mod types;
 mod utils;
 
-use super::cpu::types::{EnergyPreference, ScalingGovernor};
-use crate::drivers;
-
 pub async fn probe(
     profiles: &Vec<PowerProfile>,
 ) -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
-    let driver = Driver::from_system().await?;
-    log::trace!("Loaded {:#?}", driver);
+    let platform_drivers = vec![
+        amd::probe(profiles).await,
+        dummy::probe(profiles).await,
+        intel::probe(profiles).await,
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
+
+    let driver = Driver::from_system(platform_drivers).await?;
+    //log::trace!("Loaded {:#?}", driver);
     Ok(Arc::new(driver))
 }
 
-#[derive(Debug)]
 pub(crate) struct Driver {
     dry_run: bool,
-    platform_driver: Option<Box<dyn crate::drivers::Driver>>,
+    platform_drivers: Vec<Arc<dyn crate::drivers::Driver + std::marker::Send + Sync>>,
     policies: Vec<Policy>,
 }
 
 impl Driver {
     const ONLINE_CPUS: &'static str = "/sys/devices/system/cpu/online";
 
-    pub(crate) async fn from_system() -> Result<Self> {
+    pub(crate) async fn from_system(
+        platform_drivers: Vec<Arc<dyn crate::drivers::Driver + std::marker::Send + Sync>>,
+    ) -> Result<Self> {
         Ok(Self {
             // FIXME
             dry_run: false,
-            platform_driver: None,
+            platform_drivers: platform_drivers,
             policies: futures::future::join_all(
                 Self::online_cpu_id_iter(&Self::online_cpus().await?)?
                     .map(|cpu_id| Policy::from_cpu_id(cpu_id)),
@@ -87,15 +94,28 @@ impl crate::drivers::Driver for Driver {
         .into_iter()
         .collect::<Result<Vec<_>>>();
 
+        futures::future::join_all(
+            self.platform_drivers
+                .iter()
+                .map(|platform_driver| platform_driver.activate(power_profile)),
+        )
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>>>()?;
+
         Ok(())
     }
 
     async fn current(&self) -> Result<crate::types::InferredPowerProfile> {
+        futures::future::join_all(
+            self.policies
+                .iter()
+                .map(|policy| policy.inferred_power_profile()),
+        )
+        .await;
+
         Ok(crate::types::InferredPowerProfile {
-            boost: true,
-            energy_preference: EnergyPreference::Performance,
-            maximum_frequency: 4000000,
-            scaling_governor: ScalingGovernor::Performance,
+            cpu: Some(self::types::InferredPowerProfile { cpu_profiles: None }),
         })
     }
 
@@ -215,6 +235,22 @@ impl Policy {
             core_power_profile.energy_preference.into(),
         )
         .await
+    }
+
+    pub(crate) async fn inferred_power_profile(&self) -> Result<InferredCpuPowerProfile> {
+        Ok(InferredCpuPowerProfile {
+            boost: true,
+            energy_preference: EnergyPreference::from_str(
+                &Self::read_policy_property(self.cpu_id, Self::ENERGY_PERFORMANCE_PREFERENCE)
+                    .await?,
+            )?,
+            maximum_frequency: Self::read_policy_property(self.cpu_id, Self::SCALING_MAX_FREQ)
+                .await?
+                .parse()?,
+            scaling_governor: ScalingGovernor::from_str(
+                &Self::read_policy_property(self.cpu_id, Self::SCALING_GOVERNOR).await?,
+            )?,
+        })
     }
 
     async fn read_policy_property(cpu_id: u32, property: &str) -> Result<String> {

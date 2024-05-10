@@ -33,18 +33,18 @@ impl Handler {
     }
 
     #[zbus(property)]
-    async fn active_profile(&self) -> anyhow::Result<String, zbus::fdo::Error> {
+    async fn active_profile(&self) -> anyhow::Result<&String, zbus::fdo::Error> {
         log::debug!("Active profile being requested!");
 
         match self.driver_set.cpu.current().await {
             Ok(profile) => match self.settings.profile_by_inferred(profile) {
                 Some(profile) => {
                     log::debug!("Returning active profile: {}", profile.name);
-                    Ok(profile.name)
+                    Ok(&profile.name)
                 }
                 None => {
                     log::warn!("Unable to determine current profile");
-                    Ok(self.settings.default.clone())
+                    Ok(&self.settings.default)
                 }
             },
             Err(err) => Err(zbus::fdo::Error::Failed(format!("{:?}", err)))?,
@@ -72,7 +72,7 @@ impl Handler {
     async fn active_profile_holds(&self) -> Vec<PowerProfileHold> {
         log::debug!("Active profile holds being requested!");
 
-        self.profile_holds.clone().into_values().collect()
+        self.profile_holds.to_owned().into_values().collect()
     }
 
     #[zbus(property)]

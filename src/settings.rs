@@ -73,10 +73,10 @@ impl Settings {
     pub fn profile_by_inferred(
         &self,
         inferred_profile: InferredPowerProfile,
-    ) -> Option<PowerProfile> {
+    ) -> Option<&PowerProfile> {
         for profile in self.profiles.values().into_iter() {
-            if *profile == inferred_profile {
-                return Some(profile.clone());
+            if &inferred_profile == profile {
+                return Some(profile);
             }
         }
 

@@ -3,23 +3,7 @@ use std::{collections::HashMap, str::FromStr};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-#[derive(PartialEq)]
-pub(crate) struct InferredPowerProfile {
-    pub(crate) boost: bool,
-    pub(crate) energy_preference: EnergyPreference,
-    pub(crate) scaling_governor: ScalingGovernor,
-    pub(crate) maximum_frequency: u32,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub(crate) struct CpuPowerProfile {
-    pub(crate) boost: bool,
-    pub(crate) energy_preference: EnergyPreference,
-    pub(crate) scaling_governor: ScalingGovernor,
-    pub(crate) maximum_frequency: Option<u32>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub(crate) struct PowerProfile {
     pub(crate) cpu_profiles: Option<HashMap<u32, CpuPowerProfile>>,
     pub(crate) default: CpuPowerProfile,
@@ -43,6 +27,39 @@ impl From<crate::types::PowerProfile> for PowerProfile {
             ..value.cpu.to_owned()
         }
     }
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+pub(crate) struct CpuPowerProfile {
+    pub(crate) boost: bool,
+    pub(crate) energy_preference: EnergyPreference,
+    pub(crate) scaling_governor: ScalingGovernor,
+    pub(crate) maximum_frequency: Option<u32>,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+pub(crate) struct InferredPowerProfile {
+    pub(crate) cpu_profiles: Option<HashMap<u32, CpuPowerProfile>>,
+}
+
+impl PartialEq<PowerProfile> for InferredPowerProfile {
+    fn eq(&self, other: &PowerProfile) -> bool {
+        match &self.cpu_profiles {
+            Some(cpu_profiles) => cpu_profiles
+                .iter()
+                .map(|(cpu_id, cpu_profile)| cpu_profile == other.cpu_power_profile(*cpu_id))
+                .all(|x| x),
+            None => false,
+        }
+    }
+}
+
+#[derive(PartialEq)]
+pub(crate) struct InferredCpuPowerProfile {
+    pub(crate) boost: bool,
+    pub(crate) energy_preference: EnergyPreference,
+    pub(crate) scaling_governor: ScalingGovernor,
+    pub(crate) maximum_frequency: u32,
 }
 
 // TODO: serde doesn't recognize snake_case from the config json...

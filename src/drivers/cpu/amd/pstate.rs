@@ -18,11 +18,7 @@ pub(crate) struct Driver {
 }
 
 impl Driver {
-    const ENERGY_PREFERENCE: &'static str =
-        "/sys/devices/system/cpu/cpufreq/policy0/energy_performance_preference";
     const BOOST_FLAG: &'static str = "/sys/devices/system/cpu/cpufreq/boost";
-    const SCALING_GOVERNOR: &'static str =
-        "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor";
 
     pub async fn new(
         dry_run: bool,
@@ -46,25 +42,10 @@ impl Driver {
             Err(..) => Ok(true),
         }
     }
-
-    async fn energy_preference(&self) -> Result<EnergyPreference> {
-        Ok(fs::read_to_string(Self::ENERGY_PREFERENCE)
-            .await?
-            .trim()
-            .try_into()?)
-    }
-
-    async fn scaling_governor(&self) -> Result<ScalingGovernor> {
-        Ok(fs::read_to_string(Self::SCALING_GOVERNOR)
-            .await?
-            .trim()
-            .try_into()?)
-    }
 }
 
 #[async_trait]
 impl crate::drivers::Driver for Driver {
-    // TODO: Figure out a way to make this atomic
     async fn activate(&self, power_profile: &crate::types::PowerProfile) -> Result<()> {
         log::debug!("Activating profile {:?}", power_profile);
 
@@ -81,20 +62,11 @@ impl crate::drivers::Driver for Driver {
             false => log::warn!("Boost specified, but the current mode does not support it!"),
         }
 
-        // utils::activate_maximum_frequency(power_profile.cpu.maximum_frequency).await?;
-        // utils::activate_scaling_governor(power_profile.cpu.scaling_governor).await?;
-        // utils::activate_energy_preference(power_profile.cpu.energy_preference).await?;
-
         Ok(())
     }
 
     async fn current(&self) -> Result<crate::types::InferredPowerProfile> {
-        Ok(crate::types::InferredPowerProfile {
-            boost: self.boost_enabled().await?,
-            scaling_governor: self.scaling_governor().await?,
-            energy_preference: self.energy_preference().await?,
-            maximum_frequency: utils::maximum_frequency().await?,
-        })
+        todo!()
     }
 
     fn name(&self) -> &str {
