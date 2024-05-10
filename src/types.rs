@@ -18,16 +18,16 @@ pub(crate) struct PowerProfile {
 
 impl PartialEq<InferredPowerProfile> for PowerProfile {
     fn eq(&self, other: &InferredPowerProfile) -> bool {
-        if self.cpu.boost != other.boost {
-            return false;
-        }
+        // if self.cpu.boost != other.boost {
+        //     return false;
+        // }
 
-        if self.cpu.energy_preference != other.energy_preference {
-            return false;
-        }
-        if self.cpu.scaling_governor != other.scaling_governor {
-            return false;
-        }
+        // if self.cpu.energy_preference != other.energy_preference {
+        //     return false;
+        // }
+        // if self.cpu.scaling_governor != other.scaling_governor {
+        //     return false;
+        // }
 
         true
     }

@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -12,13 +12,28 @@ pub(crate) struct InferredPowerProfile {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct PowerProfile {
-    pub(crate) name: Option<String>,
+pub(crate) struct CpuPowerProfile {
     pub(crate) boost: bool,
     pub(crate) energy_preference: EnergyPreference,
     pub(crate) scaling_governor: ScalingGovernor,
     pub(crate) maximum_frequency: Option<u32>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct PowerProfile {
+    pub(crate) cpu_profiles: Option<HashMap<u32, CpuPowerProfile>>,
+    pub(crate) default: CpuPowerProfile,
     pub(crate) driver_options: Option<config::Value>,
+    pub(crate) name: Option<String>,
+}
+
+impl PowerProfile {
+    pub(crate) fn cpu_power_profile(&self, cpu_id: u32) -> &CpuPowerProfile {
+        match self.cpu_profiles.as_ref() {
+            Some(core_profiles) => core_profiles.get(&cpu_id).unwrap_or(&self.default),
+            None => &self.default,
+        }
+    }
 }
 
 impl From<crate::types::PowerProfile> for PowerProfile {

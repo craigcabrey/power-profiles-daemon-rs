@@ -8,7 +8,7 @@ mod pstate;
 
 const SCALING_DRIVER_PATH: &str = "/sys/devices/system/cpu/cpufreq/policy0/scaling_driver";
 
-pub async fn probe(
+pub(crate) async fn probe(
     profiles: &Vec<PowerProfile>,
 ) -> Result<Arc<dyn crate::drivers::Driver + Send + Sync>> {
     let profile_driver_settings: HashMap<String, pstate::DriverSettings> = profiles

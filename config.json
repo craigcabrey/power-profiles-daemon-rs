@@ -3,24 +3,37 @@
   "profiles": {
     "balanced": {
       "cpu": {
-        "boost": true,
-        "energy_preference": "balancePower",
-        "scaling_governor": "powersave"
+        "default": {
+          "boost": true,
+          "energy_preference": "balancePower",
+          "scaling_governor": "powersave"
+        },
+        "cpu_profiles": {
+          "0": {
+            "boost": true,
+            "energy_preference": "power",
+            "scaling_governor": "powersave"
+          }
+        }
       }
     },
     "power-saver": {
       "cpu": {
-        "boost": true,
-        "energy_preference": "power",
-        "scaling_governor": "powersave",
-        "maximum_frequency": 2000000
+        "default": {
+          "boost": true,
+          "energy_preference": "power",
+          "scaling_governor": "powersave",
+          "maximum_frequency": 2000000
+        }
       }
     },
     "performance": {
       "cpu": {
-        "boost": true,
-        "energy_preference": "performance",
-        "scaling_governor": "performance"
+        "default": {
+          "boost": true,
+          "energy_preference": "performance",
+          "scaling_governor": "performance"
+        }
       }
     }
   }

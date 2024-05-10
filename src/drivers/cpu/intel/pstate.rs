@@ -53,16 +53,16 @@ impl Driver {
 
 #[async_trait]
 impl crate::drivers::Driver for Driver {
-    async fn activate(&self, power_profile: &super::super::types::PowerProfile) -> Result<()> {
+    async fn activate(&self, power_profile: &crate::types::PowerProfile) -> Result<()> {
         if self.dry_run {
             log::debug!("Would have activated power profile {:#?}", power_profile);
 
             return Ok(());
         }
 
-        utils::activate_maximum_frequency(power_profile.maximum_frequency).await?;
-        utils::activate_scaling_governor(power_profile.scaling_governor).await?;
-        utils::activate_energy_preference(power_profile.energy_preference).await?;
+        // utils::activate_maximum_frequency(power_profile.cpu.maximum_frequency).await?;
+        // utils::activate_scaling_governor(power_profile.cpu.scaling_governor).await?;
+        // utils::activate_energy_preference(power_profile.cpu.energy_preference).await?;
 
         Ok(())
     }

@@ -9,10 +9,7 @@ pub struct Driver {}
 
 #[async_trait]
 impl crate::drivers::Driver for Driver {
-    async fn activate(
-        &self,
-        _power_profile: &super::super::cpu::types::PowerProfile,
-    ) -> Result<()> {
+    async fn activate(&self, _power_profile: &crate::types::PowerProfile) -> Result<()> {
         log::debug!("Activating!");
         Ok(())
     }

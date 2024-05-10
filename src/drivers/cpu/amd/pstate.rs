@@ -65,7 +65,7 @@ impl Driver {
 #[async_trait]
 impl crate::drivers::Driver for Driver {
     // TODO: Figure out a way to make this atomic
-    async fn activate(&self, power_profile: &super::super::types::PowerProfile) -> Result<()> {
+    async fn activate(&self, power_profile: &crate::types::PowerProfile) -> Result<()> {
         log::debug!("Activating profile {:?}", power_profile);
 
         if self.dry_run {
@@ -74,19 +74,16 @@ impl crate::drivers::Driver for Driver {
             return Ok(());
         }
 
-        if self.status.boost_supported() {
-            log::debug!("Boost is supported!");
-
-            if power_profile.boost {
-                fs::write(Self::BOOST_FLAG, "1").await?;
+        match self.status.boost_supported() {
+            true => {
+                log::debug!("Boost is supported!")
             }
-        } else {
-            log::warn!("Boost specified, but the current mode does not support it!");
+            false => log::warn!("Boost specified, but the current mode does not support it!"),
         }
 
-        utils::activate_maximum_frequency(power_profile.maximum_frequency).await?;
-        utils::activate_scaling_governor(power_profile.scaling_governor).await?;
-        utils::activate_energy_preference(power_profile.energy_preference).await?;
+        // utils::activate_maximum_frequency(power_profile.cpu.maximum_frequency).await?;
+        // utils::activate_scaling_governor(power_profile.cpu.scaling_governor).await?;
+        // utils::activate_energy_preference(power_profile.cpu.energy_preference).await?;
 
         Ok(())
     }
